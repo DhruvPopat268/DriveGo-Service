@@ -115,19 +115,7 @@ const TravelCostCalculator = () => {
 
           <div className="form-row">
             {/* Kilometers Input */}
-            <div className="input-group">
-              <label className="input-label">
-                <Navigation className="input-icon" style={{color: '#8b5cf6'}} />
-                DISTANCE (KM)
-              </label>
-              <input
-                type="number"
-                value={kilometers}
-                onChange={(e) => setKilometers(e.target.value)}
-                placeholder="Enter distance"
-                className="form-input km-input"
-              />
-            </div>
+           
 
             {/* Departure Time */}
             <div className="input-group">
