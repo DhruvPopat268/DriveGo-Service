@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { MapPin, Clock, Navigation, Calculator } from 'lucide-react';
-import './App.css'
+import './App.css';
 
 const TravelCostCalculator = () => {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedHours, setSelectedHours] = useState('');
   const [kilometers, setKilometers] = useState('');
   const [departTime, setDepartTime] = useState('');
-  const [extraChargePercent, setExtraChargePercent] = useState('');
+  const [adminCommissionPercent, setAdminCommissionPercent] = useState('');
   const [gstPercent, setGstPercent] = useState('18');
+  const [costPerMinute, setCostPerMinute] = useState('2'); // New field
 
   const cities = [
-    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 
+    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata',
     'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Surat'
   ];
 
@@ -35,25 +36,25 @@ const TravelCostCalculator = () => {
   const timeSlots = generateTimeSlots();
 
   const calculateCost = () => {
-    if (!selectedHours) return { baseCost: 0, gst: 0, extraCharge: 0, total: 0 };
-    
+    if (!selectedHours) return { baseCost: 0, gst: 0, adminCommission: 0, total: 0 };
+
     const hours = parseInt(selectedHours);
     const minutes = hours * 60;
-    const baseCost = minutes * 2; // ₹2 per minute
+    const ratePerMinute = parseFloat(costPerMinute) || 0;
+    const baseCost = minutes * ratePerMinute;
+
     const gstPercentValue = parseFloat(gstPercent) || 0;
-    const gst = baseCost * (gstPercentValue / 100); // Customizable GST
-    
-    // Calculate extra charge based on base cost
-    const extraChargePercentValue = parseFloat(extraChargePercent) || 0;
-    const extraCharge = baseCost * (extraChargePercentValue / 100);
-    
-    // Total = Base Cost + GST + Extra Charges
-    const total = baseCost + gst + extraCharge;
-    
+    const gst = baseCost * (gstPercentValue / 100);
+
+    const commissionPercentValue = parseFloat(adminCommissionPercent) || 0;
+    const adminCommission = baseCost * (commissionPercentValue / 100);
+
+    const total = baseCost + gst + adminCommission;
+
     return {
       baseCost,
       gst,
-      extraCharge,
+      adminCommission,
       total,
       gstPercent: gstPercentValue
     };
@@ -64,22 +65,19 @@ const TravelCostCalculator = () => {
   return (
     <div className="calculator-container">
       <div className="max-width-container">
-        {/* Header */}
         <div className="header">
           <h1>
             <Navigation className="header-icon" />
-            driverGo 
+            driverGo
           </h1>
           <p>Calculate your travel expenses with GST included</p>
         </div>
 
-        {/* Input Form */}
         <div className="form-card">
           <div className="form-row">
-            {/* City Selection */}
             <div className="input-group">
               <label className="input-label">
-                <MapPin className="input-icon" style={{color: '#3b82f6'}} />
+                <MapPin className="input-icon" style={{ color: '#3b82f6' }} />
                 SELECT CITY
               </label>
               <select
@@ -94,10 +92,9 @@ const TravelCostCalculator = () => {
               </select>
             </div>
 
-            {/* Hours Selection */}
             <div className="input-group">
               <label className="input-label">
-                <Clock className="input-icon" style={{color: '#10b981'}} />
+                <Clock className="input-icon" style={{ color: '#10b981' }} />
                 TRAVEL HOURS
               </label>
               <select
@@ -114,13 +111,9 @@ const TravelCostCalculator = () => {
           </div>
 
           <div className="form-row">
-            {/* Kilometers Input */}
-           
-
-            {/* Departure Time */}
             <div className="input-group">
               <label className="input-label">
-                <Clock className="input-icon" style={{color: '#f59e0b'}} />
+                <Clock className="input-icon" style={{ color: '#f59e0b' }} />
                 DEPARTURE TIME
               </label>
               <select
@@ -136,17 +129,26 @@ const TravelCostCalculator = () => {
             </div>
           </div>
 
-          {/* Customization Section */}
           <div className="customization-section">
             <h3 className="section-title">
-              <Calculator className="input-icon" style={{color: '#667eea'}} />
+              <Calculator className="input-icon" style={{ color: '#667eea' }} />
               Customization
             </h3>
             <div className="form-row">
               <div className="input-group">
-                <label className="input-label">
-                  GST (%)
-                </label>
+                <label className="input-label">Cost per Minute (₹)</label>
+                <input
+                  type="number"
+                  value={costPerMinute}
+                  onChange={(e) => setCostPerMinute(e.target.value)}
+                  placeholder="2"
+                  min="0"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">GST (%)</label>
                 <input
                   type="number"
                   value={gstPercent}
@@ -157,15 +159,13 @@ const TravelCostCalculator = () => {
                   className="form-input"
                 />
               </div>
-              
+
               <div className="input-group">
-                <label className="input-label">
-                  EXTRA CHARGE (%)
-                </label>
+                <label className="input-label">Admin Commission (%)</label>
                 <input
                   type="number"
-                  value={extraChargePercent}
-                  onChange={(e) => setExtraChargePercent(e.target.value)}
+                  value={adminCommissionPercent}
+                  onChange={(e) => setAdminCommissionPercent(e.target.value)}
                   placeholder="10 for 10%"
                   min="0"
                   max="100"
@@ -176,73 +176,54 @@ const TravelCostCalculator = () => {
           </div>
         </div>
 
-        {/* Cost Calculation Card */}
         <div className="cost-card">
           <div className="cost-header">
-            <Calculator style={{width: '32px', height: '32px'}} />
+            <Calculator style={{ width: '32px', height: '32px' }} />
             <h2 className="cost-title">Cost Breakdown</h2>
           </div>
 
           {selectedHours ? (
             <div>
-              {/* Trip Details */}
               <div className="trip-details">
                 <h3>Trip Details</h3>
                 <div className="trip-grid">
-                  <div className="trip-item">
-                    <div className="trip-label">City:</div>
-                    <div className="trip-value">{selectedCity || 'Not selected'}</div>
-                  </div>
-                  <div className="trip-item">
-                    <div className="trip-label">Duration:</div>
-                    <div className="trip-value">{selectedHours} hour{selectedHours > 1 ? 's' : ''}</div>
-                  </div>
-                  <div className="trip-item">
-                    <div className="trip-label">Distance:</div>
-                    <div className="trip-value">{kilometers || 'Not entered'} KM</div>
-                  </div>
-                  <div className="trip-item">
-                    <div className="trip-label">Departure:</div>
-                    <div className="trip-value">{departTime || 'Not selected'}</div>
-                  </div>
+                  <div className="trip-item"><div className="trip-label">City:</div><div className="trip-value">{selectedCity || 'Not selected'}</div></div>
+                  <div className="trip-item"><div className="trip-label">Duration:</div><div className="trip-value">{selectedHours} hour{selectedHours > 1 ? 's' : ''}</div></div>
+                  <div className="trip-item"><div className="trip-label">Distance:</div><div className="trip-value">{kilometers || 'Not entered'} KM</div></div>
+                  <div className="trip-item"><div className="trip-label">Departure:</div><div className="trip-value">{departTime || 'Not selected'}</div></div>
                 </div>
               </div>
 
-              {/* Cost Breakdown */}
               <div className="cost-breakdown">
                 <h3>Cost Calculation</h3>
-                
-                <div>
+                <div className="cost-item">
+                  <span className="cost-label">Base Cost ({selectedHours * 60} minutes × ₹{costPerMinute}/min)</span>
+                  <span className="cost-value">₹{cost.baseCost.toFixed(2)}</span>
+                </div>
+
+                <div className="cost-item">
+                  <span className="cost-label">GST ({cost.gstPercent}%)</span>
+                  <span className="cost-value">₹{cost.gst.toFixed(2)}</span>
+                </div>
+
+                {adminCommissionPercent && parseFloat(adminCommissionPercent) > 0 && (
                   <div className="cost-item">
-                    <span className="cost-label">Base Cost ({selectedHours * 60} minutes × ₹2/min)</span>
-                    <span className="cost-value">₹{cost.baseCost.toFixed(2)}</span>
+                    <span className="cost-label">Admin Commission ({adminCommissionPercent}%)</span>
+                    <span className="cost-value">₹{cost.adminCommission.toFixed(2)}</span>
                   </div>
-                  
-                  <div className="cost-item">
-                    <span className="cost-label">GST ({cost.gstPercent}%)</span>
-                    <span className="cost-value">₹{cost.gst.toFixed(2)}</span>
-                  </div>
-                  
-                  {extraChargePercent && parseFloat(extraChargePercent) > 0 && (
-                    <div className="cost-item">
-                      <span className="cost-label">Extra Charge ({extraChargePercent}%)</span>
-                      <span className="cost-value">₹{cost.extraCharge.toFixed(2)}</span>
-                    </div>
-                  )}
-                  
-                  <div className="cost-item total-amount">
-                    <span className="cost-label">Total Amount</span>
-                    <span className="cost-value">₹{cost.total.toFixed(2)}</span>
-                  </div>
+                )}
+
+                <div className="cost-item total-amount">
+                  <span className="cost-label">Total Amount</span>
+                  <span className="cost-value">₹{cost.total.toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Rate Information */}
               <div className="rate-info">
                 <div className="rate-info-text">
-                  <strong>Rate Structure:</strong> ₹2 per minute + {gstPercent || 0}% GST
-                  {extraChargePercent && parseFloat(extraChargePercent) > 0 && (
-                    <span> + {extraChargePercent}% extra charge</span>
+                  <strong>Rate Structure:</strong> ₹{costPerMinute} per minute + {gstPercent || 0}% GST
+                  {adminCommissionPercent && parseFloat(adminCommissionPercent) > 0 && (
+                    <span> + {adminCommissionPercent}% admin commission</span>
                   )}
                 </div>
               </div>
